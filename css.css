@@ -1,0 +1,91 @@
+body{
+    text-align: center;
+    font-family: "PF Encore Sans Pro Thin", Georgia, sans-serif;
+}
+table{
+    display: inline-block;
+    font-size: 30px;
+}
+.window{
+    margin: 5px auto;
+    padding: 5px;
+    width: 50%;
+	display: inline-block;
+    border: 1px solid black;
+}
+/*Заголовок*/
+h1{
+    font-size: 40px;
+    color: #b57338;
+}
+/* Инфо*/
+.info{
+    display: inline-block;
+}
+h2.name{
+
+}
+td{
+    border: 1px solid black;
+    width: 75px;
+    height: 150px;
+}
+td.takenCard{
+background-color: lightblue;
+}
+td.takenCardOnTable{
+	background-color: #ebbd78;
+}
+/* Кнопки */
+.buttons{
+    	display: inline-block;
+		width: 0;
+		height: 0;
+}
+button{
+    outline: none;
+    display: block;
+	background-color: #ffe2a4;
+    width: 120px;
+    font: bold 15px/1 Georgia;
+    margin: 5px;
+    border-radius: 10px;
+    height: 30px;
+}
+button:hover{
+    transform: scale(1.05);
+}
+.canNotClick{
+    background-color: #a2a194;
+}
+/* Карта */
+.card{
+	position: relative;
+}
+.i1{
+	padding: 5px;
+	position: absolute;
+	font-style: normal;
+	left: 0;
+	top: 0;
+}
+.i2{
+	padding: 5px;
+	position: absolute;
+	font-style: normal;
+	right: 0;
+	bottom: 0;
+}
+.red{
+	color: red;
+}
+/* Виды */
+.jack{
+	background: url(images/jack.png) center center no-repeat;
+}
+.lady{
+	background: url(images/lady.png) center center no-repeat;
+}
+.king{
+	background: url(images/king.png) center center no-repeat;
+}
