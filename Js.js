@@ -87,8 +87,12 @@ $(function(){
         },
 		//Выложить карту на стол
 		layCardOnTable: function(card){
-			$("#table").append("<td class='tableCards card " + this.classPeople(card)+
-			"' data-value='" + card + "'>" + this.testCard(card) + "</td>");
+			let id;
+			if($("#table td").length < 4) id = "#table"
+			else id = "#table2"
+            $(id).append("<td class='tableCards card " + this.classPeople(card)+
+                "' data-value='" + card + "'>" + this.testCard(card) + "</td>");
+
 		},
 		//Выдать карту игроку
 		getCardForPlayer: function(player, card){
@@ -99,20 +103,15 @@ $(function(){
 				"' data-value='" + card + "'>" + this.testCard(card)+"</td>");
 			}
 		},
-		peopleCard: function(card){
-			let num = Number(card.match(/\d+/));
-			if(num === 8) return "В";
-			if(num === 9) return "Д";
-			if(num === 10) return "К";
-			return false;
-		},
+		//Если дама, валет или король
 		classPeople: function(card){
-			let s = this.peopleCard(card);
-			if(s === "В") return "jack";
-			if(s === "Д") return "lady";
-			if(s === "К") return "king";
+            let num = Number(card.match(/\d+/));
+			if(num === 8) return "jack";
+			if(num === 9) return "lady";
+			if(num === 10) return "king";
 			return "";
 		},
+		//Поставить масти к картам
 		testCard: function(card){
 			let sign;
 			let classRed = "red";
@@ -130,7 +129,14 @@ $(function(){
 
 			let str = "<i class='i1 " + classRed +"'>" + card + "</i>" + "<i class='i2 " + classRed + "'>" + card + "</i>";
 			return str;
-		}
+		},
+		//Бот
+		botDeleteCard: function () {
+			$(".notView").last().remove();
+        },
+		botDeleteCardOnTable: function (val) {
+			$("[data-value='" + val +"'").remove();
+        }
 	};
 
 
@@ -156,7 +162,7 @@ $(function(){
 			}
 			//Раздать карты
 			this.dealCards();
-
+			console.log(model.players);
 		},
 		//Раздать карты игрокам
 		dealCards: function(){
@@ -183,7 +189,6 @@ $(function(){
             return randCard;
         },
 		//ход игрока
-		//Кнопки
         //Подсветить кнопку Выложить, если выбрана только карта из руки
 		testGive: function(){
 			let arrTable = $("#table td").get();
@@ -198,31 +203,28 @@ $(function(){
 			}
             for(let i = 0; i < arrPeople.length; i++){
                 if($(arrPeople[i]).hasClass('takenCard') ) {
-                	console.log("hc");
                     hasTakenClass = true;
                 }
             }
 			if(hasClass && hasTakenClass) {
-				console.log(false);
 				return false;
             }
 			else if(hasTakenClass){
-                console.log(true);
 				return true;
             }
 		},
 		//Сравнить карту игрока и выбранные карты на столе
         equalsCards: function() {
+			//Безопасность
             this.testCardOnTables();
             let val = $(".takenCard").attr('data-value');
             if(val){ //Если не пусто
-                console.log(val);
                 this.testCardInArr(model.players[1].deck, val);
-                val = val.match(/\d+/);
+                val = this.makeNumber(val);
             }else{
             	return false;
 			}
-            let mycard = Number(val);
+            let mycard = val;
 			let arrOfTableCards = $(".takenCardOnTable").get();
 			//Если выбрано и то, и то
 			if(val !== undefined && arrOfTableCards.length !== 0){
@@ -230,9 +232,9 @@ $(function(){
                 //Если на столе карта того же номинала, нельзя брать другие
                 for(let i = 0; i < model.cardsOnTable.length; i++){
                     console.log(mycard);
-                    if(mycard === Number(model.cardsOnTable[i].match(/\d+/))){
+                    if(mycard === this.makeNumber(model.cardsOnTable[i])){
                         let val = $(arrOfTableCards[0]).attr('data-value');
-                        return mycard === Number(val.match(/\d+/));
+                        return mycard === this.makeNumber(val);;
                     }
                 }
                 for(let i = 0; i < arrOfTableCards.length; i++){
@@ -240,7 +242,7 @@ $(function(){
                     //Проверка. Есть ли карта в массиве
 					//Т.к. можно сменить аттрибут data-value
                     if(this.testCardInArr(model.cardsOnTable, val)){
-                        val = Number(val.match(/\d+/));
+                        val = this.makeNumber(val);
                         score += val;
                     }
                 }
@@ -345,18 +347,159 @@ $(function(){
 			}
 		},
 		endOfPlayer: function(){
+			console.log("End of Player");
 			view.deleteAllTriggers();
-			this.bot();
+			this.bot(0);
 		},
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 		//Ход бота
 		bot: function (bot) {
+			//Проверка, есть ли на столе пики - за них доп. очки
+			let botCards = model.players[bot].deck;
+			//Если в колоде 7 пика
+            let indexOf7 = this.getIndexByContent(botCards, "7П");
+            if(indexOf7){
+                let indexs = this.botCanTakeCard(bot, model.players[bot].deck[indexOf7]);
+                if(indexs){
+                    console.log("Беру!");
+                    this.botGetCard(bot, indexOf7, indexs);
+                    return true;
+				}
+			}
+			//Если на столе 7 пика
+
+			let indexsOfP
 			for(let i = 0; i < model.cardsOnTable.length; i++){
 				let card = model.cardsOnTable[i];
-				let n = card.match(/\d+/);
-				console.log(n);
+				/*if(card === "7П"){
+
+				}
+
+				console.log("Карта, котоаря на столе " + card);
+				let cardWithoutN = String(card.match(/\D+/)) ;
+				if(cardWithoutN === "П"){
+
+				} */
 			}
-			let botCards = model.players[bot].deck;
+        },
+		//Проверка, может ли бот использовать карту
+		//Если не может - false, если идентичные карты - индекс карты на столе
+		// если несколько карт - массив индексов
+		botCanTakeCard: function (bot, card) {
+			let cardsOnTable = model.cardsOnTable;
+			//console.log("ИНдекс: " + indexCard + " " +cardsOnTable[indexCard]);
+			let numCardsOnTable = this.makeNumberArr(model.cardsOnTable);
+			card = controler.makeNumber(card);
+			//Если такая же карта на столе
+			for(let i = 0; i < numCardsOnTable.length; i++) {
+                if (card === numCardsOnTable[i]) {
+                    return i;
+                }
+            }
+            let indexs = [];
+			for(let i = 0; i < numCardsOnTable.length; i++){
+				if(numCardsOnTable[i] < card){
+					indexs.push(i);
+					sum = numCardsOnTable[i];
+					for(let j = 0; j < numCardsOnTable.length; j++){
+						//Если это не та же карта
+						if(i !== j){
+                            sum += numCardsOnTable[j];
+                            indexs.push(j);
+                            if(sum > card){
+                                sum -= numCardsOnTable[j];
+                                indexs.pop();
+                            }else if(sum === card){
+                                return indexs;
+                            }
+						}
+					}
+				}
+				indexs = [];
+			}
+			//Не выходит ничего
+			return false;
+
+        },
+		//Можно ли взять определённую карту
+		botCanTakeCertainCard: function(bot, card){
+			let indexMyCard;
+            let indexCard = this.getIndexByContent(model.cardsOnTable, card);
+			let indexsTableCard = [indexCard];
+
+            let numCardsOnTable = this.makeNumberArr(model.cardsOnTable);
+            let numBotCards = this.makeNumberArr(model.players[bot].deck);
+
+
+			let num = numCardsOnTable[indexCard];
+
+			let sum = 0;
+			for(let i = 0; i < numBotCards.length; i++){
+				indexMyCard = i;
+                if(numBotCards[i] < num){
+                	sum = num;
+                	for(let j = 0; j < numCardsOnTable.length; j++){
+
+					}
+				}
+			}
+		},
+		makeNumberArr: function(arr){
+            let numCards = arr.map(function (el) {
+                return controler.makeNumber(el);
+            })
+			return numCards;
+		},
+		makeNumber: function (card) {
+			return Number(card.match(/\d+/));
+        },
+		getIndexByContent: function (arr, content) {
+			if(!arr.includes(content)) return false;
+			for(let i = 0; i < arr.length; i++){
+				if(content === arr[i]) return i;
+			}
+    	},
+		botGetCard(bot, indexMyCard, indexTableCards){
+			model.players[bot].deck;
+			//Добавить и удалить выбранную карту боту
+            this.addCard(bot, model.players[bot].deck[indexMyCard]);
+            this.deleteCard(bot, model.players[bot].deck[indexMyCard]);
+            //Удалить видимую карту у бота
+            view.botDeleteCard();
+			//Добавить карты со стола боту
+			if(typeof indexTableCards === "number"){
+                let val = model.cardsOnTable[indexTableCards];
+                this.botAllFunc(bot, val);
+			}else{
+                for(let i = 0; i < indexTableCards.length; i++){
+                    let val = model.cardsOnTable[indexTableCards[i]];
+                    this.botAllFunc(bot, val);
+                }
+			}
+				console.log(model.players);
+			},
+		botAllFunc: function (bot, val) {
+			//Добавить карту боту в массив
+            this.addCard(bot, val);
+            //Удалить карту из массива стола
+            this.deleteCardOnTable(val);
+            //Удалить видимую карту на столе
+            view.botDeleteCardOnTable(val);
         }
+		
 	};
 	controler.startGame();
 });

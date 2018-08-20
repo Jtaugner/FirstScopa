@@ -1,31 +1,47 @@
+*{
+    box-sizing: border-box;
+}
 body{
     text-align: center;
     font-family: "PF Encore Sans Pro Thin", Georgia, sans-serif;
 }
 table{
+    flex: 4;
     display: inline-block;
     font-size: 30px;
 }
+.windows{
+    border: 1px solid black;
+    border-radius: 50px;
+    width: 50%;
+    margin: 0 auto;
+}
 .window{
+    border-radius: 50px;
     margin: 5px auto;
     padding: 5px;
-    width: 50%;
-	display: inline-block;
-    border: 1px solid black;
+	display: flex;
+    flex-flow: row wrap;
+
 }
 /*Заголовок*/
 h1{
-    font-size: 40px;
-    color: #b57338;
+
+}
+p{
+    font-family: Helvetica, sans-serif;
+    font-size: 20px;
+    color: #9c7a0b;
 }
 /* Инфо*/
 .info{
+    flex: 2;
+    align-self: flex-start;
+    text-align: left;
     display: inline-block;
 }
-h2.name{
-
-}
 td{
+
     border: 1px solid black;
     width: 75px;
     height: 150px;
@@ -38,19 +54,18 @@ td.takenCardOnTable{
 }
 /* Кнопки */
 .buttons{
-    	display: inline-block;
-		width: 0;
-		height: 0;
+    width: 0;
+    margin-top: 35px;
 }
 button{
     outline: none;
     display: block;
 	background-color: #ffe2a4;
-    width: 120px;
-    font: bold 15px/1 Georgia;
-    margin: 5px;
+    width: 150px;
+    font: bold 20px/1 Georgia, serif;
+    margin-left: 15px;
     border-radius: 10px;
-    height: 30px;
+    height: 35px;
 }
 button:hover{
     transform: scale(1.05);
