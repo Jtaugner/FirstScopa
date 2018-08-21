@@ -162,7 +162,8 @@ $(function(){
 			}
 			//Раздать карты
 			this.dealCards();
-			console.log(model.players);
+			console.log(model.players[0]);
+            console.log(model.cardsOnTable);
 		},
 		//Раздать карты игрокам
 		dealCards: function(){
@@ -372,33 +373,66 @@ $(function(){
 			//Если в колоде 7 пика
             let indexOf7 = this.getIndexByContent(botCards, "7П");
             if(indexOf7){
-                let indexs = this.botCanTakeCard(bot, model.players[bot].deck[indexOf7]);
+                let indexs = this.botCanTakeCard(bot, botCards[indexOf7]);
                 if(indexs){
-                    console.log("Беру!");
+                	console.log("7 ПИКА")
                     this.botGetCard(bot, indexOf7, indexs);
                     return true;
 				}
 			}
 			//Если на столе 7 пика
-
-			let indexsOfP
-			for(let i = 0; i < model.cardsOnTable.length; i++){
-				let card = model.cardsOnTable[i];
-				/*if(card === "7П"){
-
+            if(model.cardsOnTable.includes("7П")){
+                let arr = this.botCanTakeCertainCard(bot, "7П");
+                if(arr){
+                    console.log("7 ПИКА - стол")
+                    this.botGetCard(bot, arr[0], arr[1]);
+                    return true;
 				}
-
-				console.log("Карта, котоаря на столе " + card);
+			}
+			//Ищем пики в колоде
+			for(let i = 0; i < botCards.length; i++){
+                //if(this.findPeak(bot, botCards[i])) return true;
+                let card = botCards[i];
+                let cardWithoutN = String(card.match(/\D+/)) ;
+                if(cardWithoutN === "П"){
+                    let arr = this.botCanTakeCard(bot, card);
+                    if(arr){
+                        this.botGetCard(bot, arr[0], arr[1]);
+                        return true;
+                    }
+                }
+			}
+            //Ищем пики на столе
+			for(let i = 0; i < model.cardsOnTable.length; i++){
+                //if(this.findPeak(bot, model.cardsOnTable[i])) return true;
+				let card = model.cardsOnTable[i];
 				let cardWithoutN = String(card.match(/\D+/)) ;
 				if(cardWithoutN === "П"){
-
-				} */
+                    let arr = this.botCanTakeCertainCard(bot, card);
+                    if(arr){
+                        this.botGetCard(bot, arr[0], arr[1]);
+                        return true;
+                    }
+				}
 			}
         },
+		findPeak: function(bot, card){
+			console.log(card);
+            let cardWithoutN = String(card.match(/\D+/)) ;
+            if(cardWithoutN === "П"){
+                let indexs = this.botCanTakeCertainCard(bot, card);
+                if(indexs){
+                    console.log("7 ПИКА - стол")
+                    this.botGetCard(bot, indexs[0], indexs[1]);
+                    return true;
+                }
+            }
+            return false;
+		},
 		//Проверка, может ли бот использовать карту
 		//Если не может - false, если идентичные карты - индекс карты на столе
 		// если несколько карт - массив индексов
-		botCanTakeCard: function (bot, card) {
+		botCanTakeCard: function(bot, card) {
 			let cardsOnTable = model.cardsOnTable;
 			//console.log("ИНдекс: " + indexCard + " " +cardsOnTable[indexCard]);
 			let numCardsOnTable = this.makeNumberArr(model.cardsOnTable);
@@ -436,9 +470,10 @@ $(function(){
         },
 		//Можно ли взять определённую карту
 		botCanTakeCertainCard: function(bot, card){
+			let arrIndexs  = [];
 			let indexMyCard;
             let indexCard = this.getIndexByContent(model.cardsOnTable, card);
-			let indexsTableCard = [indexCard];
+			let indexTableCard = [indexCard];
 
             let numCardsOnTable = this.makeNumberArr(model.cardsOnTable);
             let numBotCards = this.makeNumberArr(model.players[bot].deck);
@@ -449,13 +484,37 @@ $(function(){
 			let sum = 0;
 			for(let i = 0; i < numBotCards.length; i++){
 				indexMyCard = i;
-                if(numBotCards[i] < num){
+				if(numBotCards[i] === num){
+					console.log(numBotCards[i], num);
+					arrIndexs.push(indexMyCard);
+					arrIndexs.push(indexTableCard);
+					return arrIndexs;
+				}
+			}
+			for(let i = 0; i < numBotCards.length; i++){
+				indexMyCard = i;
+                if(numBotCards[i] > num){
                 	sum = num;
                 	for(let j = 0; j < numCardsOnTable.length; j++){
-
+                        //Если это не та же карта
+                        if(indexCard !== j){
+                            sum += numCardsOnTable[j];
+                            console.log(sum, indexTableCard, numBotCards[i]);
+                            console.log(numBotCards);
+                            indexTableCard.push(j);
+                            if(sum > numBotCards[i]){
+                                sum -= numCardsOnTable[j];
+                                indexTableCard.pop();
+                            }else if(sum === numBotCards[i]){
+                                arrIndexs.push(indexMyCard);
+                                arrIndexs.push(indexTableCard);
+                                return arrIndexs;
+                            }
+                        }
 					}
 				}
 			}
+			return false;
 		},
 		makeNumberArr: function(arr){
             let numCards = arr.map(function (el) {
@@ -490,6 +549,7 @@ $(function(){
                 }
 			}
 				console.log(model.players);
+				console.log(model.cardsOnTable);
 			},
 		botAllFunc: function (bot, val) {
 			//Добавить карту боту в массив
