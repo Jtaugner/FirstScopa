@@ -11,7 +11,7 @@ $(function(){
         playerName : "",
         playerStroke: false,
     //Классы, подлежащие удалению при уборке карты
-    classes : "takenCardOnTable botTakenCardOnTable jackP jackB jackC jackT ladyP ladyB ladyC ladyT kingP kingB kingT kingC tableCards"
+    classes : "takenCardOnTable botTakenCardOnTable jackP jackB jackC jackT ladyP ladyB ladyC ladyT kingP kingB kingT kingC tableCards dragon"
 		/* */
 	};
 
