@@ -1,6 +1,3 @@
-*{
-    box-sizing: border-box;
-}
 body{
     text-align: center;
     font-family: "PF Encore Sans Pro Thin", Georgia, sans-serif;
@@ -10,11 +7,23 @@ table{
     display: inline-block;
     font-size: 30px;
 }
+.player{
+   margin-left: 116px;
+}
+/*Игра*/
+#game{
+    display: none;
+}
+.game{
+    position: relative;
+}
 .windows{
-    border: 1px solid black;
+    position: relative;
+    border: 5px solid #66492d;
     border-radius: 50px;
     width: 50%;
     margin: 0 auto;
+    background: url(images/bg.png);
 }
 .window{
     border-radius: 50px;
@@ -24,13 +33,15 @@ table{
     flex-flow: row wrap;
 
 }
-/*Заголовок*/
-h1{
-
+/*Невидимые карты*/
+.notView{
+background-color: black;
+    opacity: 0.2;
 }
+/*Заголовок*/
 p{
     font-family: Helvetica, sans-serif;
-    font-size: 20px;
+    font-size: 25px;
     color: #9c7a0b;
 }
 /* Инфо*/
@@ -40,8 +51,10 @@ p{
     text-align: left;
     display: inline-block;
 }
+.cards{
+    font-size: 30px;
+}
 td{
-
     border: 1px solid black;
     width: 75px;
     height: 150px;
@@ -49,13 +62,19 @@ td{
 td.takenCard{
 background-color: lightblue;
 }
+td.delete{
+    background-color: lightblue;
+}
 td.takenCardOnTable{
 	background-color: #ebbd78;
+}
+td.botTakenCardOnTable{
+    background-color: #ebbd78;
 }
 /* Кнопки */
 .buttons{
     width: 0;
-    margin-top: 35px;
+    margin-top: 125px;
 }
 button{
     outline: none;
@@ -73,34 +92,271 @@ button:hover{
 .canNotClick{
     background-color: #a2a194;
 }
-/* Карта */
-.card{
-	position: relative;
+#rules{
+    width: 200px;
+    height: 50px;
+    margin-left: 44%;
+    margin-bottom: 5px;
 }
-.i1{
-	padding: 5px;
-	position: absolute;
-	font-style: normal;
-	left: 0;
-	top: 0;
+/*Всплывающие окна*/
+.decor{
+    position: absolute;
+    color: #66492d;
+    font-weight: bold;
+    font-size: 70px;
+    left: 32%;
+    top: 40%;
+    display: none;
 }
-.i2{
-	padding: 5px;
-	position: absolute;
-	font-style: normal;
-	right: 0;
-	bottom: 0;
+.scopa{
+    left: 40%;
+    top: 40%;
+    animation: scop 2s linear forwards;
 }
-.red{
-	color: red;
+@keyframes scop {
+    table{
+        flex: 6;
+    }
+    from {
+        font-size: 35px;
+        text-shadow: 1px 1px 1px #b22525;
+    }
+    10%{
+        font-size: 40px;
+    }
+    20%{
+        font-size: 45px;
+    }
+    30%{
+        font-size: 50px;
+    }
+    40%{
+        font-size: 55px;
+    }
+    50% {
+        font-size: 60px;
+    }
+    60% {
+        font-size: 65px;
+    }
+    70% {
+        font-size: 70px;
+    }
+    80% {
+        font-size: 75px;
+    }
+    90% {
+        font-size: 80px;
+    }
+    to {
+        font-size: 90px;
+        text-shadow: 3px 3px 3px #b22525;
+    }
+}
+.stage{
+    color: #ffa442;
+}
+/*Конец*/
+.screen{
+    left: -1%;
+    top: -1%;
+    width: 100%;
+    height: 100%;
+    border: 5px solid #66492d;
+    background-color: #ffe2a4;
+    border-radius: 50px;
+}
+.end{
+    font-size: 30px;
+}
+/*Статистика*/
+.stat {
+    font-size: 20px;
+    text-align: center;
+    margin: 0 auto;
+}
+.stat button{
+    background-color: #9c7a0b;
+    margin: 0 auto;
+    width: 150px;
+    height: 50px;
+}
+.statRes{
+    display: flex;
+    justify-content: space-around;
+    margin: 5px;
+    font-weight: bold;
+}
+.stat:nth-child(1n) {
+    border-top: none;
+}
+/*Заголовки в статистике*/
+.cap{
+    width: 100%;
+    color: black;
+    font-weight: bold;
+    margin: 5px 5px 5px 0;
+    display: inline-block;
+    border-top: 1px solid black;
+    border-bottom: 1px solid black;
+}
+/*Правила*/
+.rules{
+    display: none;
+}
+.rules p{
+    color: black;
+}
+.rules ul, .rules ol{
+    font-size: 20px;
+    color: #66492d;
+
+}
+.rules ul, .rules ol{
+    list-style-type: none;
+}
+.rules li{
+    margin: 5px;
+}
+.rules ul li, .rules ul li:before{
+    content: "\2660";
+}
+.rules ol ul{
+    color: #886039;
+
+}
+.rules .val{
+    color: #b22525;
+}
+.view{
+    display: block !important;
 }
 /* Виды */
-.jack{
-	background: url(images/jack.png) center center no-repeat;
+/*Вальты*/
+.jackP{
+	background: url(images/jackP.png) center center no-repeat;
 }
-.lady{
-	background: url(images/lady.png) center center no-repeat;
+.jackC{
+  background: url(images/jackC.png) center center no-repeat;
 }
-.king{
-	background: url(images/king.png) center center no-repeat;
+.jackT{
+  background: url(images/jackT.png) center center no-repeat;
+}
+.jackB{
+  background: url(images/jackB.png) center center no-repeat;
+}
+/*Дамы*/
+.ladyP{
+	background: url(images/ladyP.png) center center no-repeat;
+}
+.ladyB{
+    background: url(images/ladyB.png) center center no-repeat;
+}
+.ladyC{
+    background: url(images/ladyC.png) center center no-repeat;
+}
+.ladyT{
+    background: url(images/ladyT.png) center center no-repeat;
+}
+/*Короли*/
+.kingP{
+	background: url(images/kingP.png) center center no-repeat;
+}
+.kingB{
+  background: url(images/kingB.png) center center no-repeat;
+}
+.kingC{
+  background: url(images/kingC.png) center center no-repeat;
+}
+.kingT{
+  background: url(images/kingT.png) center center no-repeat;
+}
+/*7 пика*/
+.dragon{
+    background: url(images/dragon.png) center center no-repeat;
+}
+/* Карта */
+.card{
+    position: relative;
+}
+i{
+    text-shadow: 1px 0 0 white, -1px 0 0 white;
+    padding: 5px;
+    position: absolute;
+    font-style: normal;
+}
+.i1{
+    right: 0;
+    top: 0;
+}
+.i2{
+    left: 0;
+    bottom: 0;
+}
+.red{
+    color: red;
+}
+/*Начало игры*/
+.getGame input{
+    background-color: #ffe2a4;
+    padding: 10px;
+    font-size: 20px;
+    font-weight: bold;
+    outline: none;
+    border-radius: 10px;
+    margin: 5px;
+}
+#getGame{
+    margin: 0 auto;
+}
+/* Телефоны */
+@media screen and (max-width: 980px) {
+	.card{
+	-webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
+	}
+    .getGame input{
+        width: 300px;
+        font-size: 30px;
+        border-radius: 20px;
+        height: 50px;
+    }
+    td{
+        border: 1px solid black;
+        width: 125px;
+        height: 250px;
+    }
+    table{
+        order: 1;
+    }
+    .info{
+        order: 3;
+        text-align: right;
+    }
+    .windows{
+        width: 95%;
+    }
+    button{
+        width: 250px;
+        height: 75px;
+        font-size: 30px;
+        border-radius: 15px;
+    }
+    .buttons{
+        margin-top: 180px;
+        order: 2;
+    }
+    .scopa{
+        left: 10%;
+        top: 40%;
+    }
+    #rules{
+        width: 200px;
+        font-size: 20px;
+        height: 50px;
+        margin: 0 auto;
+        margin-bottom: 10px;
+    }
 }

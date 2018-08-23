@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
 	<script type="text/javascript" src="jquery-1.11.3.min.js"></script>
 	<script type="text/javascript" src="Js.js"></script>
@@ -8,28 +8,43 @@
 	<link rel="stylesheet" href="css.css">
 </head>
  <body>
-<h1>Скопа &#9824;</h1>
+ <h1>Скопа &#9824;</h1>
+ <div class="getGame">
+     <input type="text" maxlength="20" placeholder="Ваше имя">
+     <button id="getGame">Начать игру</button>
+ </div>
 <div id="game">
 	<!-- 1 игрок -->
 	<div class="windows">
+    <div class="game">
 	<div class="window">
         <div class="info">
-        <p class="name">Имя: Ботиус</p>
-        <p class="score">Очки: 0</p>
+        	<p class="name">Имя: Ботиус</p>
+        	<p class="score" id="firstScore">Очки: 0</p>
         </div>
-	<table>
+	<table class="player">
 		<tr id="firstPlayer"></tr>
 	</table>
 	</div>
 	<!-- Стол -->
 	<div class="window">
 		<div class="info">
-			<p class="cards">Карт в колоде: </p>
+			<p class="cards">Карт в колоде: 40</p>
 		</div>
-	<table>
-		<tr id="table">
+	<table  id="table">
+		<tr>
+			<td class="card doNotTouch"></td>
+			<td class="card doNotTouch"></td>
+			<td class="card doNotTouch"></td>
+			<td class="card doNotTouch"></td>
+			<td class="card doNotTouch"></td>
 		</tr>
-		<tr id="table2">
+		<tr>
+			<td class="card doNotTouch"></td>
+			<td class="card doNotTouch"></td>
+			<td class="card doNotTouch"></td>
+			<td class="card doNotTouch"></td>
+			<td class="card doNotTouch"></td>
 		</tr>
 	</table>
 		<div class="buttons">
@@ -40,14 +55,95 @@
 	<!-- 2 игрок -->
 	<div class="window">
 		<div class="info">
-			<p class="name">Имя: Jtaugner</p>
-			<p class="score">Очки: 0</p>
+			<p class="name">Имя: <span class="playerName">Jtaugner</span></p>
+			<p class="score" id="secondScore">Очки: 0</p>
 		</div>
-	<table>
+	<table class="player">
 		<tr id="secondPlayer">
 		</tr>
 	</table>
 	</div>
+        <div class="decor scopa">Скопа</div>
+        <div class="decor stage">Этап начался</div>
+        </div>
+        <div class="decor statistic screen">
+            <div class="stat">
+                <p class="cap">Имена</p>
+                <p class="statRes">
+                    <span>Jtaugner</span>
+                    <span>Ботиус</span>
+                </p>
+                <p class="cap">Дракон - 7 пика.</p>
+                <p class="statRes">
+                    <span>0</span>
+                    <span>0</span>
+                </p>
+                <p class="cap">Большинство пик</p>
+                <p class="statRes">
+                    <span>0</span>
+                    <span>0</span>
+                </p>
+                <p class="cap">Большинство взяток</p>
+                <p class="statRes">
+                    <span>0</span>
+                    <span>0</span>
+                </p>
+                <p class="cap">Большинство очков</p>
+                <p class="statRes">
+                    <span>0</span>
+                    <span>0</span>
+                </p>
+                <p class="cap">Итог</p>
+                <p class="statRes">
+                    <span id="res1">0</span>
+                    <span id="res2">0</span>
+                </p>
+                <button id="looked">Посмотрел</button>
+            </div>
+        </div>
+        <div class="decor end screen">
+            <h1></h1>
+            <h2>Ваша статистика: </h2>
+            <p></p>
+        </div>
+        <button id="rules">Показать правила</button>
+        <!-- Правила игры -->
+        <div class="rules"><h1>Цель игры: Получить 11 очков.</h1>
+            <h2>Ваша задача брать взятки. Взятка - это когда вы забираете себе карту из руки и карты(у) со стола, сумма очков которых(ой) совпадает с очками на вашей карте.</h2>
+            <h2>Также важно стараться получить скопу - это забрать последнюю карту со стола. За это даётся одно очко.</h2>
+            <p>Карты: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 8 - Валет, 9 - Дама, 10 - Король всех мастей(пики, червы, бубны, трефы). Всего - 40.</p>
+            <p>Когда вы берёте взятку во время игры, стоимость каждой карты равна ее достоинству, валет- 8 очков, дама- 9 очков, король-10 очков. </p>
+            <p>При подсчете очков самыми ценными считаются 7,6,5,4,3,2,1 после них 8(валет), 9(дама), 10(король). Король - самая малая карта по ценности. Семёрка - самая большая.
+            <p class="val">7 пики - самая ценная карта, за неё дают одно очко.</p>
+            <p>В начале каждой игры игрокам раздается по 3 карты и 4 карты выкладываются в центр стола рубашкой вниз.</p>
+            <h2>Ход этапа игры: </h2>
+            <ol>
+                <li>1) Игрок берёт взятку в случае:</li>
+                <ul>
+                    <li>Если очки карты в его руках совпадают с очками карты в центре стола</li>
+                    <li>Если очки на карте игрока совпадают с очками собранных карт в центре стола</li>
+                </ul>
+                <p class="val">  Примечание: Если с одной картой совпадают оба варианта, использовать можно только первый - взять карту того же достоинства.</p>
+                <li>	2) Если игроку не удается забрать карты из центра стола, он выкладывает свою любую карту на стол</li>
+                <li>	3) Ход переходит к следующему игроку.</li>
+                <li>	4) Когда карты на руках у игроков заканчиваются, всем снова выдаётся по 3 карты.</li>
+                <li>	5) Когда все карты в колоде и в руках игроков закончились, этап завершается. Игрок, который последний забрал взятку, получает все карты со стола.</li>
+                <li>	6) Идёт подсчёт очков. Если у какого-либо игрока 11 или больше очков, он выигрывает. Если игроки не набирают 11 очков, то начинается новый этап.</li>
+            </ol>
+            <h2>Получение очков:</h2>
+            <h3>Во время игры:</h3>
+            <ul>
+                <li>Если игрок забрал последнюю карту со стола, то ему даётся скопа - 1 очко.</li>
+            </ul>
+            <h3>После игры:</h3>
+            <ul>
+                <li>Если у игрока в колоде семёрка пики - 1 очко.
+                <li>Если у игрока во взятых картах больше всех карт масти пики -  1 очко.
+                <li>Если у игрока большее количество взяток - 1 очко.
+                <li>Если у игрока большее количество взяток - 1 очко.
+            </ul>
+
+        </div>
 	</div>
 </div>
  </body>

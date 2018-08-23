@@ -5,10 +5,18 @@ $(function(){
 		scoreForWin: 11,
 		cardsOnTable: [],
 		//Карты - всего 40
-		deckOfCards: ["1Т", "1Б", "1Ч", "1П", "2Т", "2Б", "2Ч", "2П", "3Т", "3Б", "3Ч", "3П", "4Т",
-		"4Б", "4Ч", "4П", "5Т", "5Б", "5Ч", "5П", "6Т", "6Б", "6Ч", "6П", "7Т", "7Б",
-		"7Ч", "7П", "8Т", "8Б", "8Ч", "8П", "9Т", "9Б", "9Ч", "9П", "10Т", "10Б", "10Ч", "10П"]
+		deckOfCards: [],
+        lastBribe: false,
+    lastGame: false,
+        playerName : "",
+        playerStroke: false,
+    //Классы, подлежащие удалению при уборке карты
+    classes : "takenCardOnTable botTakenCardOnTable jackP jackB jackC jackT ladyP ladyB ladyC ladyT kingP kingB kingT kingC tableCards"
+		/* */
 	};
+
+
+
 
 
 
@@ -16,9 +24,8 @@ $(function(){
 	let view = {
 		//Начать игру
 		startGame: function(){
-			//Анти-баг
 			$("#secondPlayer").click(view.clickOnCard);
-			$("#table").click(view.clickOnTable);
+			$("#table, #table2").click(view.clickOnTable);
 		},
 		testButtons: function(){
 			//Если на кнопку Выложить можно нажать
@@ -32,10 +39,9 @@ $(function(){
             //Если на кнопку Взять можно нажать
 				if(controler.equalsCards() ){
 					$("#get").removeClass("canNotClick").click(view.clickOnGet);
-                }
-                else{
-                    $("#get").addClass("canNotClick");
-                    this.deleteClickOnGet()
+				} else{
+				  $("#get").addClass("canNotClick");
+				  this.deleteClickOnGet()
 				}
 		},
 		//Убрать триггеры
@@ -68,47 +74,109 @@ $(function(){
 		},
         clickOnTable: function (e) {
             let el = document.elementFromPoint(e.clientX, e.clientY);
-            if($(el).hasClass("card")) $(el).toggleClass("takenCardOnTable");
-            else $(el).parent().toggleClass("takenCardOnTable");
+            if( $(el).hasClass("card") ){
+                if($(el).hasClass("doNotTouch")){
+                    return false;
+                }
+                $(el).toggleClass("takenCardOnTable");
+            }
+            else{
+                $(el).parent().toggleClass("takenCardOnTable");
+            }
             view.testButtons();
         },
         clickOnGive: function () {
-            if(controler.giveCard(1)){
-                $(".takenCard").remove();
-                view.testButtons();
-            }
+            controler.giveCard(1)
+			$(".takenCard").remove();
+            view.testButtons();
         },
         clickOnGet: function () {
-            if(controler.getCard(1)){
-                $(".takenCard").remove();
-                $(".takenCardOnTable").remove();
-                view.testButtons();
+            controler.testArrs();
+            controler.getCard(1);
+            $(".takenCard").remove();
+            view.removeCard(".takenCardOnTable");
+            view.testButtons();
+        },
+        clickOnLooked: function () {
+            $(".statistic").removeClass("view");
+            $("#looked").off('click', view.clickOnLooked);
+            view.showScore();
+            if(controler.testWin()){
+                return true;
+            }else{
+                controler.startStage();
             }
         },
 		//Выложить карту на стол
-		layCardOnTable: function(card){
-			let id;
-			if($("#table td").length < 4) id = "#table"
-			else id = "#table2"
-            $(id).append("<td class='tableCards card " + this.classPeople(card)+
-                "' data-value='" + card + "'>" + this.testCard(card) + "</td>");
+		layCardOnTable: function(card, time, bot){
+            view.showCardsInDeck();
+			let arrTd = $("#table td").get();
+			for(let i = 0; i < arrTd.length; i++){
+				if( $(arrTd[i]).text() === "") {
+                    if(time){
+                        setTimeout(function () {
+                            $(arrTd[i]).removeClass("doNotTouch").addClass("tableCards " + view.classPeople(card)).attr("data-value", card).html(view.testCard(card));
+                            if(bot !== undefined) controler.endOfStroke(bot);
+                        }, time);
+                        return true;
+                    }else{
+                        $(arrTd[i]).removeClass("doNotTouch").addClass("tableCards " + view.classPeople(card)).attr("data-value", card).html(view.testCard(card));
+                        return true;
+                    }
+                }
+			}
+            return false;
+		},
+		layCardsOnTable: function(cards){
+			let time = 300;
+			for(let i = 0; i < cards.length; i++){
+				setTimeout(function (){view.layCardOnTable(cards[i]);}, time);
+				time += 300;
+			}
+			//Дать возможность нажатия только после "выпуска" всего контента
+            if(model.playerStroke === true){
+                setTimeout(function () {
+                    view.startGame();
+                }, time);
+            }else{
+                setTimeout(function () {
+                    controler.bot(0);
+                }, time);
+            }
 
 		},
 		//Выдать карту игроку
-		getCardForPlayer: function(player, card){
-			if(player === 1){
-				$("#firstPlayer").append("<td class='notView'></td>");
-			}else if(player === 2){
-				$("#secondPlayer").append("<td class='peopleCards card " + this.classPeople(card)+
-				"' data-value='" + card + "'>" + this.testCard(card)+"</td>");
-			}
-		},
-		//Если дама, валет или король
+		getCardForPlayer: function(player, card, time) {
+            view.showCardsInDeck();
+      if (player === 0) {
+        setTimeout(function () {
+          $("#firstPlayer").append("<td class='notView'></td>");
+        }, time);
+
+      } else if (player === 1) {
+        setTimeout(function () {
+          $("#secondPlayer").append("<td class='peopleCards card " + view.classPeople(card) +
+            "' data-value='" + card + "'>" + view.testCard(card) + "</td>");
+        }, time);
+      }
+    },
+    //Если дама, валет или король
 		classPeople: function(card){
-            let num = Number(card.match(/\d+/));
-			if(num === 8) return "jack";
-			if(num === 9) return "lady";
-			if(num === 10) return "king";
+		  switch (card){
+        case "8П": return "jackP";
+        case "8Б": return "jackB";
+        case "8Ч": return "jackC";
+        case "8Т": return "jackT";
+        case "9П": return "ladyP";
+        case "9Б": return "ladyB";
+        case "9Ч": return "ladyC";
+        case "9Т": return "ladyT";
+        case "10П": return "kingP";
+        case "10Б": return "kingB";
+        case "10Ч": return "kingC";
+        case "10Т": return "kingT";
+        case "7П": return "dragon";
+      }
 			return "";
 		},
 		//Поставить масти к картам
@@ -126,16 +194,102 @@ $(function(){
 				classRed = "";
 			}
 			card = card.slice(0, -1) + sign;
-
-			let str = "<i class='i1 " + classRed +"'>" + card + "</i>" + "<i class='i2 " + classRed + "'>" + card + "</i>";
-			return str;
+			return "<i class='i1 " + classRed +"'>" + card + "</i>" + "<i class='i2 " + classRed + "'>" + card + "</i>";
 		},
 		//Бот
-		botDeleteCard: function () {
-			$(".notView").last().remove();
+		botDeleteCard: function (bot, card) {
+			this.showCard(card);
+			setTimeout(function () {
+                $(".delete").remove();
+            }, 3000);
         },
-		botDeleteCardOnTable: function (val) {
-			$("[data-value='" + val +"'").remove();
+		showCard: function(card){
+			let notViewArr = $(".notView").get();
+			let rand = Math.floor(Math.random() * notViewArr.length);
+			$(notViewArr[rand]).addClass("card delete " + view.classPeople(card)).removeClass("notView").append(view.testCard(card));
+		},
+        botDeleteCardsOnTable: function (vals, bot) {
+			for(let i = 0; i < vals.length; i++){
+                $("[data-value='" + vals[i] +"'").addClass("botTakenCardOnTable");
+			}
+			setTimeout(function () {
+                for(let i = 0; i < vals.length; i++){
+                    view.removeCard("[data-value='" + vals[i] +"']");
+                }
+                controler.endOfStroke(bot);
+            }, 3000);
+
+        },
+        removeCard: function(removeClass) {
+            $(removeClass).html("").addClass("doNotTouch").removeClass(model.classes).removeAttr("data-value");
+        },
+        removeAllCard: function() {
+            view.removeCard(".tableCards");
+        },
+		come: function (comeClass) {
+			$("." + comeClass).addClass("view");
+			setTimeout(function () {
+				$("." +     comeClass).removeClass("view");
+                view.showScore();
+            }, 2000)
+        },
+        showScore: function () {
+        $("#firstScore").text("Очки: " + model.players[0].score);
+        $("#secondScore").text("Очки: " + model.players[1].score);
+        },
+        //Вывести результаты этапа
+        showRes: function (arrOfNames, arrOfIndexs) {
+		    let arr = $(".statRes span");
+            $(arr[0]).text(arrOfNames[0]);
+            $(arr[1]).text(arrOfNames[1]);
+            let index = 2;
+            for(let i = 0; i < arrOfIndexs.length; i++){
+                    if(arrOfIndexs[i] === -1){
+                        $(arr[index]).text("0");
+                        $(arr[index + 1]).text("0");
+                    }else if(arrOfIndexs[i] === 0){
+                        $(arr[index]).text("1");
+                        $(arr[index + 1]).text("0");
+                    }else{
+                        $(arr[index]).text("0");
+                        $(arr[index + 1]).text("1");
+                    }
+                index += 2;
+            }
+            $("#res1").text(model.players[0].score);
+            $("#res2").text(model.players[1].score);
+            return true;
+            //stat;
+        },
+        getRes: function (arrOfNames, arrOfIndexs) {
+            this.showRes(arrOfNames, arrOfIndexs);
+            $(".statistic").addClass("view");
+            $("#looked").click(view.clickOnLooked);
+        },
+        showCardsInDeck: function () {
+            $(".cards").text("Карт в колоде: " + model.deckOfCards.length);
+        },
+        //Показать правила
+        rules: function () {
+            $("#rules").click(function () {
+                if($(".rules").hasClass("view")){
+                    $(".rules").removeClass("view");
+                    $("#rules").text("Показать правила");
+                }else{
+                    $(".rules").addClass("view");
+                    $("#rules").text("Скрыть правила");
+                }
+
+            });
+        },
+        sayWinOrLoss: function (bool) {
+            let str = "";
+            if(bool === true) str = "Победа! Поздравляю!";
+            else if(bool === false) str = "Поражение. Попробуйте ещё.";
+            else if (bool === 0) str = "Ничья. Это удивительно!";
+            $(".end h1").text(str);
+            $(".end p").html("Всего взято карт: " + model.players[1].allTakenCards + "<br>" + "Всего взяток: " + model.players[1].allBribes);
+            $(".end").addClass("view");
         }
 	};
 
@@ -143,45 +297,85 @@ $(function(){
 
 
 
+
+
 	let controler = {
+	  //Начало игры
 		startGame: function(){
-			//Задать триггеры
-			view.startGame();
+            view.rules();
 			//Задать игроков
 			for(let i = 0; i < model.amountOfplayers; i++){
 				model.players[i] = {
 					deck: [],
 					score: 0,
-					takenCards: []
+					takenCards: [],
+                    bribes: 0,
+                    allTakenCards: 0,
+                    allBribes: 0
 				};
 			}
-			//Выложить карты на стол
-			for(let i = 0; i < 4; i++){
-				let rand = this.getRandCard();
-				this.layCardOnTable(rand);
-			}
-			//Раздать карты
-			this.dealCards();
-			console.log(model.players[0]);
-            console.log(model.cardsOnTable);
+			this.startStage();
 		},
+    //Начало этапа
+    startStage: function(){
+		    //Сменить ход
+            model.playerStroke = !model.playerStroke;
+		    view.deleteAllTriggers();
+		    //Убрать взятые карты и взятки
+		    for(let i = 0; i < model.players.length; i++){
+		        model.players[i].takenCards = [];
+                model.players[i].bribes = 0;
+            }
+            //Убрать карты на столе
+		    model.cardsOnTable = [];
+		    model.deckOfCards = ["1Т", "1Б", "1Ч", "1П", "2Т", "2Б", "2Ч", "2П",
+                                    "3Т", "3Б", "3Ч", "3П", "4Т", "4Б", "4Ч", "4П",
+                                    "5Т", "5Б", "5Ч", "5П", "6Т", "6Б", "6Ч", "6П",
+                                    "7Т", "7Б", "7Ч", "7П", "8Т", "8Б", "8Ч", "8П",
+                                  "9Т", "9Б", "9Ч", "9П", "10Ч", "10П", "10Т", "10Б"];
+            //Раздать карты
+             let time = this.dealCards();
+             setTimeout(function () {
+                controler.layRandCardsOnTable();
+            }, time);
+    },
 		//Раздать карты игрокам
 		dealCards: function(){
-			for(let j = 0; j < 4; j++){
+			let time = 300;
+			for(let j = 0; j < 3; j++){
                 for(let i = 0; i < model.players.length; i++){
                     let randCard = this.getRandCard();
-					//console.log(randCard + " p = " + i);
                     model.players[i].deck.push(randCard);
-					view.getCardForPlayer(i + 1, randCard);
+					view.getCardForPlayer(i, randCard, time);
+					time += 300;
                 }
-                if(model.deckOfCards.length === 0) return false;
+                if(model.deckOfCards.length === 0) return time;
 			}
+			return time;
 		},
 		//Выложить карту на стол
-        layCardOnTable: function (card) {
+        layCardOnTable: function (card, time, bot) {
 				model.cardsOnTable.push(card);
-				view.layCardOnTable(card);
+				if(time !== undefined && bot !== undefined) view.layCardOnTable(card, time, bot);
+				else view.layCardOnTable(card);
         },
+		layCardsOnTable: function(cards){
+			for(let i = 0; i < cards.length; i++){
+				model.cardsOnTable.push(cards[i]);
+			}
+			view.layCardsOnTable(cards);
+		},
+		layRandCardsOnTable: function(){
+            let rands = [];
+            let length = 4;
+            if(model.deckOfCards.length < 4){
+                length = model.deckOfCards.length;
+            }
+            for(let i = 0; i < length; i++){
+                rands.push(this.getRandCard());
+            }
+            this.layCardsOnTable(rands);
+		},
 		//Получение рандомной карты
 		getRandCard: function () {
             let rand = Math.floor(Math.random() * model.deckOfCards.length);
@@ -216,11 +410,8 @@ $(function(){
 		},
 		//Сравнить карту игрока и выбранные карты на столе
         equalsCards: function() {
-			//Безопасность
-            this.testCardOnTables();
             let val = $(".takenCard").attr('data-value');
             if(val){ //Если не пусто
-                this.testCardInArr(model.players[1].deck, val);
                 val = this.makeNumber(val);
             }else{
             	return false;
@@ -228,23 +419,29 @@ $(function(){
             let mycard = val;
 			let arrOfTableCards = $(".takenCardOnTable").get();
 			//Если выбрано и то, и то
-			if(val !== undefined && arrOfTableCards.length !== 0){
+			if(mycard !== undefined && arrOfTableCards.length !== 0){
                 let score = 0;
                 //Если на столе карта того же номинала, нельзя брать другие
                 for(let i = 0; i < model.cardsOnTable.length; i++){
-                    console.log(mycard);
                     if(mycard === this.makeNumber(model.cardsOnTable[i])){
-                        let val = $(arrOfTableCards[0]).attr('data-value');
-                        return mycard === this.makeNumber(val);;
+                        if(arrOfTableCards.length === 1){
+                            let num = $(arrOfTableCards[0]).attr('data-value');
+                            if(num === undefined) return false;
+                            return mycard === this.makeNumber(num);
+                        }else{
+                            return false;
+                        }
                     }
                 }
                 for(let i = 0; i < arrOfTableCards.length; i++){
                     let val = $(arrOfTableCards[i]).attr('data-value');
-                    //Проверка. Есть ли карта в массиве
-					//Т.к. можно сменить аттрибут data-value
-                    if(this.testCardInArr(model.cardsOnTable, val)){
+                    if(val !== undefined){
                         val = this.makeNumber(val);
                         score += val;
+                    }else{
+                        alert(arrOfTableCards);
+                        alert(val);
+                        return false;
                     }
                 }
                 return score === mycard;
@@ -255,10 +452,25 @@ $(function(){
 			if(arr.includes(card)){
 				return true;
 			}else{
-				console.log("sss");
                 this.badBoy();
+                return false;
 			}
 		},
+        testArrs: function(){
+		    let arr = $(".peopleCards").get();
+		  for(let i = 0; i < arr.length; i++){
+		      if(!this.testCardInArr(model.players[1].deck, $(arr[i]).attr("data-value"))){
+		          return false;
+              }
+          }
+            arr = $(".tableCards").get();
+            for(let i = 0; i < arr.length; i++){
+                if(!this.testCardInArr(model.cardsOnTable, $(arr[i]).attr("data-value"))){
+                    return false;
+                }
+            }
+            return true;
+        },
 		//Если нарушил правлиа
 		badBoy: function(){
             alert("Ты жулик! Уходи из игры!");
@@ -266,50 +478,29 @@ $(function(){
             $("h1").text("Жуликам в игре не место!");
             return false;
 		},
-        testCardOnTables: function(){
-			let arrTd = $("td.card").get();
-			let arr = [];
-			for(let i = 0; i < arrTd.length; i++){
-				arr.push($(arrTd[i]).attr('data-value'));
-			}
-			arr = arr.sort();
-			let prevel = arr[0];
-			for(let i = 1; i < arr.length; i++){
-				if(prevel === arr[i]){
-					console.log(prevel, arr[i]);
-					this.badBoy();
-					return false;
-				}else{
-					prevel = arr[i];
-				}
-			}
-			return true;
-		},
 		//Выложить карту
 		giveCard: function (player) {
-			//Если ходит бот
-			if(player === 0){
-				return true;
-			}else if(player === 1){ //Если игрок
+			 if(player === 1){ //Если игрок
 				//Если можно выложить карту
-				if( this.testGive() ){
-                    let card = $(".takenCard").attr('data-value');
-                    this.deleteCard(1, card);
-                    controler.layCardOnTable(card)
-                }
-                this.endOfPlayer();
-				return true;
+				 let card = $(".takenCard").attr('data-value');
+				 if(card !== undefined){
+                     this.deleteCard(player, card);
+                     controler.layCardOnTable(card);
+                     this.endOfStroke(player);
+                     return true;
+                 }
             }
-			return false;
+            return false;
         },
 		//Удалить карту у игрока
 		deleteCard: function (player, card) {
             for (let i = 0; i < model.players[player].deck.length; i++) {
                 if (model.players[player].deck[i] === card) {
                     model.players[player].deck.splice(i, 1);
-                    break;
+                    return true;
                 }
             }
+            return false;
         },
 		//Добавить в полученные игроком карты
 		addCard: function(player, card){
@@ -317,23 +508,21 @@ $(function(){
 		},
 		//Взять взятку
 		getCard: function (player) {
-            //Если ходит бот
-			if(player === 0){
-				return true;
-			}else if(player === 1){
+			 if(player === 1){
 				//Если можно взять взятку
-				if(this.equalsCards() ){
                     let card = $(".takenCard").attr('data-value');
                     let arrOfTableCards = $(".takenCardOnTable").get();
-                    this.addCard(1, card);
+                    this.addCard(player, card);
                     for(let i = 0; i < arrOfTableCards.length; i++){
 						let val = $(arrOfTableCards[i]).attr('data-value');
-                    	this.addCard(1, val);
+                    	this.addCard(player, val);
 						this.deleteCardOnTable(val);
 					}
-                    this.deleteCard(1, card);
-				}
-                this.endOfPlayer();
+					this.deleteCard(player, card);
+                    model.lastBribe = player;
+                    this.endOfStroke(player);
+                //Добавить взятку
+                model.players[player].bribes++;
 				return true;
 			}
 			return false;
@@ -347,12 +536,180 @@ $(function(){
 				}
 			}
 		},
-		endOfPlayer: function(){
-			console.log("End of Player");
-			view.deleteAllTriggers();
-			this.bot(0);
+		deleteCardsOnTable: function(vals){
+			for(let i = 0; i < vals.length; i++){
+				this.deleteCardOnTable(vals[i]);
+			}
 		},
+    //Конец хода
+		endOfStroke: function(player){
+			//Если карты у игроков закончились == 0
+      let length = 0;
+      for(let i = 0; i < model.players.length; i++){
+        length += model.players[i].deck.length;
+        }
+        /*Скопа*/
+        if(model.cardsOnTable.length === 0){
+        model.players[player].score++;
+            	view.come("scopa");
+			}
 
+			//Если колода не закончилась
+			if(model.deckOfCards.length !== 0){
+                //Если карты у игроков закончились
+                if(length === 0){
+                    this.dealCards();
+                }
+			}else{
+                //Конец этапа
+				if(length === 0) {
+                    //Удалить все видимые карты со стола
+                    view.removeAllCard();
+                    /*Игрок, последний получивший взятку, получает все карты со стола*/
+                    let arr =  model.players[model.lastBribe].takenCards.concat(model.cardsOnTable);
+                    model.players[model.lastBribe].takenCards =arr;
+                    //Подсчёт очков
+                    this.calculatePoints();
+                    return true;
+                }
+			}
+			//Если сходил последний игрок, начинаем сначала
+			if(player === model.players.length - 1){
+				player = 0;
+			}else{
+				player++;
+			}
+			if(player === 1){
+                view.deleteAllTriggers();
+                view.startGame();
+			}else{
+                view.deleteAllTriggers();
+                this.bot(0);
+			}
+		},
+    // Подсчитать очки
+    calculatePoints: function(){
+      let peaks = [];
+      let bribes = [];
+      let scores = [];
+      //Массив, который будет передан в showRes();
+      let indexArr = [];
+      for(let i = 0; i < model.players.length; i++) {
+        peaks.push(0);
+        scores.push(0);
+        /*За 7 пику очко*/
+        if(model.players[i].takenCards.includes("7П")){
+            indexArr.push(i);
+          model.players[i].score++;
+        }
+        /*Пики в колоде*/
+        for(let j = 0; j < model.players[i].takenCards.length; j++){
+          let card = model.players[i].takenCards[j];
+          let cardStr = String(card.match(/\D+/));
+          let cardNum = this.makeNumber(card);
+          //Подсчёт очков
+          switch (cardNum){
+            case 1: scores[i] += 4; break;
+            case 2: scores[i] += 5;break;
+            case 3: scores[i] += 6;break;
+            case 4: scores[i] += 7;break;
+            case 5: scores[i] += 8;break;
+            case 6: scores[i] += 9; break;
+            case 7: scores[i] += 10; break;
+            case 8: scores[i] += 3; break;
+            case 9: scores[i] += 2; break;
+            case 10: scores[i] += 1;
+          }
+          if(cardStr === "П"){
+            peaks[i]++;
+          }
+        }
+        //Взятки
+        bribes.push(model.players[i].bribes);
+      }
+      //Очко за пики в колоде
+        if(peaks[0] === peaks[1]){
+            indexArr.push(-1);
+        }else{
+            let indexOfPeaks = peaks.indexOf(Math.max.apply(Math, peaks));
+            indexArr.push(indexOfPeaks);
+            model.players[indexOfPeaks].score++;
+        }
+      //Очко за взятки
+        if(bribes[0] === bribes[1]){
+            indexArr.push(-1);
+        }else{
+            let indexOfBribes = bribes.indexOf(Math.max.apply(Math, bribes));
+            indexArr.push(indexOfBribes);
+            model.players[indexOfBribes].score++;
+        }
+        //Очко за количество очков
+        if(scores[0] === scores[1]){
+            indexArr.push(-1);
+        }else{
+            let indexOfScores = scores.indexOf(Math.max.apply(Math, scores));
+            indexArr.push(indexOfScores);
+            model.players[indexOfScores].score++;
+        }
+        /*Добавить общие взятки  и карты*/
+        for(let i = 0; i < model.players.length; i++){
+            model.players[i].allTakenCards +=  model.players[i].takenCards.length;
+            model.players[i].allBribes +=  model.players[i].bribes;
+        }
+      //Проверка на победу
+      //Показать результаты.
+        setTimeout(function (){
+            view.getRes([model.playerName, "Я"], indexArr);
+        }, 1000);
+
+    },
+        testWin: function(){
+            let winnersScore = [];
+            let indexsWinners = [];
+            for(let i = 0; i < model.players.length; i++){
+                if(model.players[i].score >= model.scoreForWin){
+                    winnersScore.push(model.players[i].score);
+                    indexsWinners.push(i);
+                }
+            }
+            //Если последняя игра
+            if(model.lastGame === true){
+                if(winnersScore[0] === winnersScore[1]){
+                    this.sayWinOrLoss(0);
+                }else if(winnersScore[0] > winnersScore[1]){
+                    this.sayWinOrLoss(false);
+                }else{
+                    this.sayWinOrLoss(true);
+                }
+            }
+            if(indexsWinners.length > 1){
+                if(indexsWinners[0] === indexsWinners[1]){
+                    model.lastGame = true;
+                }else if(indexsWinners[0] > indexsWinners[1]){
+                    if(indexsWinners[0] === 1){
+                        this.sayWinOrLoss(true);
+                        return true;
+                    }else{
+                        this.sayWinOrLoss(false);
+                        return true;
+                    }
+                }
+
+            }else if(indexsWinners.length === 1){
+                if(indexsWinners[0] === 0){
+                    this.sayWinOrLoss(false);
+                    return true;
+                }else{
+                    this.sayWinOrLoss(true);
+                    return true;
+                }
+            }
+            return false;
+        },
+        sayWinOrLoss: function(bool){
+            view.sayWinOrLoss(bool);
+		    console.log("Молодца!");
+        },
 
 
 
@@ -368,82 +725,69 @@ $(function(){
 
 		//Ход бота
 		bot: function (bot) {
+            let botCards = model.players[bot].deck;
 			//Проверка, есть ли на столе пики - за них доп. очки
-			let botCards = model.players[bot].deck;
-			//Если в колоде 7 пика
-            let indexOf7 = this.getIndexByContent(botCards, "7П");
-            if(indexOf7){
-                let indexs = this.botCanTakeCard(bot, botCards[indexOf7]);
-                if(indexs){
-                	console.log("7 ПИКА")
-                    this.botGetCard(bot, indexOf7, indexs);
-                    return true;
-				}
+			//Если в своей колоде 7 пика
+			if(this.findSevenPeak(bot, botCards, this.botCanUseCard)){
+                return true;
 			}
 			//Если на столе 7 пика
-            if(model.cardsOnTable.includes("7П")){
-                let arr = this.botCanTakeCertainCard(bot, "7П");
-                if(arr){
-                    console.log("7 ПИКА - стол")
-                    this.botGetCard(bot, arr[0], arr[1]);
-                    return true;
-				}
+			if(this.findSevenPeak(bot, model.cardsOnTable, this.botCanTakeCard)){
+                return true;
 			}
-			//Ищем пики в колоде
+			//Ищем пики в своей колоде
 			for(let i = 0; i < botCards.length; i++){
-                //if(this.findPeak(bot, botCards[i])) return true;
-                let card = botCards[i];
-                let cardWithoutN = String(card.match(/\D+/)) ;
-                if(cardWithoutN === "П"){
-                    let arr = this.botCanTakeCard(bot, card);
-                    if(arr){
-                        this.botGetCard(bot, arr[0], arr[1]);
-                        return true;
-                    }
-                }
+                if(this.findPeak(bot, botCards[i], this.botCanUseCard)) return true;
 			}
             //Ищем пики на столе
 			for(let i = 0; i < model.cardsOnTable.length; i++){
-                //if(this.findPeak(bot, model.cardsOnTable[i])) return true;
-				let card = model.cardsOnTable[i];
-				let cardWithoutN = String(card.match(/\D+/)) ;
-				if(cardWithoutN === "П"){
-                    let arr = this.botCanTakeCertainCard(bot, card);
-                    if(arr){
-                        this.botGetCard(bot, arr[0], arr[1]);
-                        return true;
-                    }
-				}
+                if(this.findPeak(bot, model.cardsOnTable[i], this.botCanTakeCard)) return true;
 			}
+			//Перебираем оставшиеся варианты в своей колоде
+			for(let i = 0; i < botCards.length; i++){
+				if(this.testIndexs(bot, this.botCanUseCard, botCards[i])) return true;
+			}
+            this.botGiveCard(bot);
+            return true;
         },
-		findPeak: function(bot, card){
-			console.log(card);
+		findPeak: function(bot, card, func){
             let cardWithoutN = String(card.match(/\D+/)) ;
             if(cardWithoutN === "П"){
-                let indexs = this.botCanTakeCertainCard(bot, card);
-                if(indexs){
-                    console.log("7 ПИКА - стол")
-                    this.botGetCard(bot, indexs[0], indexs[1]);
-                    return true;
-                }
+            	if(this.testIndexs(bot, func, card)) return true;
+            }
+            return false;
+		},
+		findSevenPeak: function(bot, arr, func) {
+            if (arr.includes("7П")) {
+                if (this.testIndexs(bot, func, "7П")) return true;
+            }
+			return false;
+		},
+		testIndexs: function(bot, func, card){
+            let indexs = func(bot, card);
+            if(indexs){
+                this.botGetCard(bot, indexs[0], indexs[1]);
+                return true;
             }
             return false;
 		},
 		//Проверка, может ли бот использовать карту
-		//Если не может - false, если идентичные карты - индекс карты на столе
-		// если несколько карт - массив индексов
-		botCanTakeCard: function(bot, card) {
-			let cardsOnTable = model.cardsOnTable;
-			//console.log("ИНдекс: " + indexCard + " " +cardsOnTable[indexCard]);
-			let numCardsOnTable = this.makeNumberArr(model.cardsOnTable);
+		//Если не может - false, если может - [индекс его карты. [индексы карт на столе] ]
+        botCanUseCard: function(bot, card) {
+			let numCardsOnTable = controler.makeNumberArr(model.cardsOnTable);
+			let indexBotCard = controler.getIndexByContent(model.players[bot].deck, card);
+			let arrIndexs = [indexBotCard];
 			card = controler.makeNumber(card);
+            let indexs = [];
 			//Если такая же карта на столе
 			for(let i = 0; i < numCardsOnTable.length; i++) {
                 if (card === numCardsOnTable[i]) {
-                    return i;
+                    indexs.push(i);
+                    arrIndexs.push(indexs);
+                    return arrIndexs;
                 }
             }
-            let indexs = [];
+            let sum = 0;
 			for(let i = 0; i < numCardsOnTable.length; i++){
 				if(numCardsOnTable[i] < card){
 					indexs.push(i);
@@ -457,7 +801,8 @@ $(function(){
                                 sum -= numCardsOnTable[j];
                                 indexs.pop();
                             }else if(sum === card){
-                                return indexs;
+                            	arrIndexs.push(indexs);
+                                return arrIndexs;
                             }
 						}
 					}
@@ -468,30 +813,36 @@ $(function(){
 			return false;
 
         },
-		//Можно ли взять определённую карту
-		botCanTakeCertainCard: function(bot, card){
+        //Проверка, может ли бот взять карту со стола
+        //Если не может - false, если может - [индекс его карты. [индексы карт на столе] ]
+		botCanTakeCard: function(bot, card){
 			let arrIndexs  = [];
 			let indexMyCard;
-            let indexCard = this.getIndexByContent(model.cardsOnTable, card);
+            let indexCard = controler.getIndexByContent(model.cardsOnTable, card);
 			let indexTableCard = [indexCard];
 
-            let numCardsOnTable = this.makeNumberArr(model.cardsOnTable);
-            let numBotCards = this.makeNumberArr(model.players[bot].deck);
+            let numCardsOnTable = controler.makeNumberArr(model.cardsOnTable);
+            let numBotCards = controler.makeNumberArr(model.players[bot].deck);
 
 
 			let num = numCardsOnTable[indexCard];
 
 			let sum = 0;
+			//Если такая же карта в руке
 			for(let i = 0; i < numBotCards.length; i++){
 				indexMyCard = i;
 				if(numBotCards[i] === num){
-					console.log(numBotCards[i], num);
-					arrIndexs.push(indexMyCard);
-					arrIndexs.push(indexTableCard);
-					return arrIndexs;
+                    arrIndexs.push(indexMyCard);
+                    arrIndexs.push(indexTableCard);
+                    return arrIndexs;
 				}
 			}
+			//Суммы очков карт
 			for(let i = 0; i < numBotCards.length; i++){
+			    //Если на столе карта того же номинала
+			    for(let k = 0; k < numCardsOnTable; k++){
+			        if(numBotCards[i] === numCardsOnTable[k]) break;
+                }
 				indexMyCard = i;
                 if(numBotCards[i] > num){
                 	sum = num;
@@ -499,8 +850,6 @@ $(function(){
                         //Если это не та же карта
                         if(indexCard !== j){
                             sum += numCardsOnTable[j];
-                            console.log(sum, indexTableCard, numBotCards[i]);
-                            console.log(numBotCards);
                             indexTableCard.push(j);
                             if(sum > numBotCards[i]){
                                 sum -= numCardsOnTable[j];
@@ -514,13 +863,13 @@ $(function(){
 					}
 				}
 			}
+			//Если карту никак не взять - false
 			return false;
 		},
 		makeNumberArr: function(arr){
-            let numCards = arr.map(function (el) {
+			return arr.map(function (el) {
                 return controler.makeNumber(el);
-            })
-			return numCards;
+            });
 		},
 		makeNumber: function (card) {
 			return Number(card.match(/\d+/));
@@ -532,34 +881,69 @@ $(function(){
 			}
     	},
 		botGetCard(bot, indexMyCard, indexTableCards){
-			model.players[bot].deck;
 			//Добавить и удалить выбранную карту боту
-            this.addCard(bot, model.players[bot].deck[indexMyCard]);
-            this.deleteCard(bot, model.players[bot].deck[indexMyCard]);
-            //Удалить видимую карту у бота
-            view.botDeleteCard();
+			let mycard = model.players[bot].deck[indexMyCard];
+            this.addCard(bot, mycard);
+            this.deleteCard(bot, mycard);
 			//Добавить карты со стола боту
-			if(typeof indexTableCards === "number"){
-                let val = model.cardsOnTable[indexTableCards];
-                this.botAllFunc(bot, val);
-			}else{
-                for(let i = 0; i < indexTableCards.length; i++){
-                    let val = model.cardsOnTable[indexTableCards[i]];
-                    this.botAllFunc(bot, val);
-                }
+			let vals = [];
+			for(let i = 0; i < indexTableCards.length; i++){
+				let val = model.cardsOnTable[indexTableCards[i]];
+				//Добавить карту боту в массив
+				this.addCard(bot, val);
+				//Добавить карту в массив удалений
+				vals.push(val);
 			}
-				console.log(model.players);
-				console.log(model.cardsOnTable);
-			},
-		botAllFunc: function (bot, val) {
-			//Добавить карту боту в массив
-            this.addCard(bot, val);
-            //Удалить карту из массива стола
-            this.deleteCardOnTable(val);
-            //Удалить видимую карту на столе
-            view.botDeleteCardOnTable(val);
+            model.lastBribe = bot;
+			//Карты удаляются после всего для убоства
+			this.deleteCardsOnTable(vals);
+            //Удалить видимую карту у бота
+            view.botDeleteCard(bot, mycard);
+			//Удалить видимые карты на столе
+			view.botDeleteCardsOnTable(vals, bot);
+            //Добавить взятку
+            model.players[bot].bribes++;
+        },
+		botGiveCard: function (bot) {
+            let rand =  Math.floor(Math.random() * model.players[bot].deck.length);
+            let card = model.players[bot].deck[rand];
+            if(card === "7П" && model.players[bot].deck.length === 1){
+                this.deleteCard(bot, card);
+                view.botDeleteCard(bot, card);
+                this.layCardOnTable(card, 3100, bot);
+                return true;
+            }
+            if(card === "7П") return this.botGiveCard(bot);
+            else{
+                this.deleteCard(bot, card);
+                view.botDeleteCard(bot, card);
+                this.layCardOnTable(card, 3100, bot);
+                return true;
+            }
         }
-		
 	};
-	controler.startGame();
+	function start(){
+        $("#game").addClass("view");
+        let val = $(".getGame input").val();
+        if(val.length > 20){
+            alert("Уходи");
+        }else{
+            if(val === "") val = "Безликий";
+            $(".getGame").remove();
+            controler.startGame();
+            $(".playerName").text(val);
+            model.playerName = val;
+        }
+    }
+	//Задать начало игры
+        $(".getGame input").keypress(function(e){
+            if(e.keyCode === 13){
+                //нажата клавиша enter
+                start();
+            }
+        });
+	//Клик по кнопке
+	$("#getGame").click(function () {
+        start();
+    });
 });
