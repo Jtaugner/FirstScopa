@@ -911,7 +911,7 @@ $(function(){
 			for(let i = 0; i < numBotCards.length; i++){
 				let haveCard = false;
 			    //Если на столе карта того же номинала
-			    for(let k = 0; k < numCardsOnTable; k++){	
+			    for(let k = 0; k < numCardsOnTable.length; k++){	
 			        if(numBotCards[i] === numCardsOnTable[k]){
 						haveCard = true;
 					}
