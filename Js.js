@@ -700,9 +700,9 @@ $(function(){
                 }
             }
             if(indexsWinners.length > 1){
-                if(indexsWinners[0] === indexsWinners[1]){
+                if(winnersScore[0] === winnersScore[1]){
                     model.lastGame = true;
-                }else if(indexsWinners[0] > indexsWinners[1]){
+                }else if(winnersScore[0] > winnersScore[1]){
                     if(indexsWinners[0] === 1){
                         this.sayWinOrLoss(true);
                         return true;
