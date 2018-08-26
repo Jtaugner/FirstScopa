@@ -38,10 +38,9 @@ table{
 background-color: black;
     opacity: 0.2;
 }
-/*Заголовок*/
 p{
-    font-family: Helvetica, sans-serif;
-    font-size: 25px;
+    font-weight: bold;
+    font-size: 20px;
     color: #9c7a0b;
 }
 /* Инфо*/
@@ -93,10 +92,16 @@ button:hover{
     background-color: #a2a194;
 }
 #rules{
+    background-color: #9b7041;
     width: 200px;
     height: 50px;
-    margin-left: 44%;
-    margin-bottom: 5px;
+    margin: 0 auto 10px auto;
+}
+#restart{
+    background-color: #9b7041;
+    margin: 0 auto;
+    width: 200px;
+    height: 50px;
 }
 /*Всплывающие окна*/
 .decor{
@@ -187,7 +192,7 @@ button:hover{
     margin: 5px;
     font-weight: bold;
 }
-.stat:nth-child(1n) {
+.stat p:nth-child(1n) {
     border-top: none;
 }
 /*Заголовки в статистике*/
@@ -203,6 +208,9 @@ button:hover{
 /*Правила*/
 .rules{
     display: none;
+}
+.rules caption{
+    margin-bottom: 20px;
 }
 .rules p{
     color: black;
@@ -226,7 +234,25 @@ button:hover{
 
 }
 .rules .val{
+    font-size: 20px;
     color: #b22525;
+}
+.rules table{
+    border-collapse: collapse;
+    margin-left: 5px;
+    margin-right: 5px;
+}
+.rules tr td:nth-child(even){
+    background: #c4dac9;
+}
+.rules th{
+	font-size: 20px;
+    border: 1px solid black;
+}
+.rules td{
+    margin: 0;
+    width: 50px;
+    height: 50px;
 }
 .view{
     display: block !important;
@@ -310,7 +336,7 @@ i{
     margin: 0 auto;
 }
 /* Телефоны */
-@media screen and (max-width: 980px) {
+@media screen and (max-width: 1024px) {
 	.card{
 	-webkit-background-size: cover;
     -moz-background-size: cover;
@@ -358,5 +384,8 @@ i{
         height: 50px;
         margin: 0 auto;
         margin-bottom: 10px;
+    }
+    #looked{
+        width: 200px;
     }
 }
