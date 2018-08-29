@@ -103,6 +103,13 @@ button:hover{
     width: 200px;
     height: 50px;
 }
+#endGame{
+	display: none;
+	margin: 0 auto;
+	width: 200px;
+	height: 40px;
+	font-size: 20px;
+}
 /*Всплывающие окна*/
 .decor{
     position: absolute;
@@ -323,6 +330,9 @@ i{
     color: red;
 }
 /*Начало игры*/
+.getGame{
+	display: none;
+}
 .getGame input{
     background-color: #ffe2a4;
     padding: 10px;
@@ -388,4 +398,8 @@ i{
     #looked{
         width: 200px;
     }
+    #restart{
+
+    width: 300px;
+}
 }

@@ -99,6 +99,7 @@ $(function(){
             controler.giveCard(1);
 			$(".takenCard").remove();
             view.testButtons();
+			controler.rememberGame();
         },
         clickOnGet: function () {
            controler.testArrs();
@@ -106,6 +107,7 @@ $(function(){
             $(".takenCard").remove();
             view.removeCard(".takenCardOnTable");
             view.testButtons();
+			controler.rememberGame();
         },
         clickOnLooked: function () {
             $(".statistic").removeClass("view");
@@ -254,6 +256,7 @@ $(function(){
             $(arr[1]).text(arrOfNames[1]);
             let index = 2;
             for(let i = 0; i < arrOfIndexs.length; i++){
+					console.log(arrOfIndexs[i]);
                     if(arrOfIndexs[i] === -1){
                         $(arr[index]).text("0");
                         $(arr[index + 1]).text("0");
@@ -272,12 +275,15 @@ $(function(){
         },
         //Вывести результаты
         getRes: function (arrOfNames, arrOfIndexs) {
+			console.log("indexs " + arrOfIndexs);
             this.showRes(arrOfNames, arrOfIndexs);
             if($(".rules").hasClass("view")){
                 $("#rules").click();
             }
             $(".statistic").addClass("view");
             $("#looked").click(view.clickOnLooked);
+            controler.rememberGame();
+			localStorage.setItem("startStage", arrOfIndexs);
         },
         showCardsInDeck: function () {
             $(".cards").text("Карт в колоде: " + model.deckOfCards.length);
@@ -307,6 +313,7 @@ $(function(){
             $(".end p").html("Всего взято карт: " + model.players[1].allTakenCards + "<br>" + "Всего взяток: " + model.players[1].allBribes);
             $(".end").addClass("view");
             $("#restart").click(view.clickToRestart);
+			localStorage.clear();
         },
         clickToRestart: function(){
             controler.restart();
@@ -324,6 +331,11 @@ $(function(){
 	  //Начало игры
 		startGame: function(){
             view.rules();
+            model.lastBribe = false;
+            model.lastGame = false;
+            model.playerStroke = false;
+            model.cardsOnTable = [];
+            model.deckOfCards = [];
 			//Задать игроков
 			for(let i = 0; i < model.amountOfplayers; i++){
 				model.players[i] = {
@@ -358,6 +370,7 @@ $(function(){
              let time = this.dealCards();
              setTimeout(function () {
                 controler.layRandCardsOnTable();
+                controler.rememberGame();
             }, time);
     },
 		//Раздать карты игрокам
@@ -474,7 +487,6 @@ $(function(){
 		        arr = arr.concat(model.players[i].deck).concat(model.players[i].takenCards);
             }
             if(this.hasDuplicates(arr)){
-                this.badBoy();
 		        return false;
             }
             return true;
@@ -678,7 +690,7 @@ $(function(){
         setTimeout(function (){
             view.getRes(["Ботиус",model.playerName], indexArr);
         }, 2000);
-
+        controler.rememberGame();
     },
         testWin: function(){
             let winnersScore = [];
@@ -979,6 +991,7 @@ $(function(){
             view.botDeleteCard(bot, mycard);
 			//Удалить видимые карты на столе
 			view.botDeleteCardsOnTable(vals, bot);
+			controler.rememberGame();
         },
 		botGiveCard: function (bot) {
             let numArr = this.makeNumberArr(model.players[bot].deck);
@@ -987,6 +1000,7 @@ $(function(){
             this.deleteCard(bot, card);
             view.botDeleteCard(bot, card);
             this.layCardOnTable(card, 3100, bot);
+            controler.rememberGame();
             return true;
         },
         //Есть ли повторы массиве
@@ -1010,16 +1024,133 @@ $(function(){
             $("#rules").off('click', view.rules());
             controler.startGame();
             view.showScore();
-        }
+        },
+		endGame: function(){
+			localStorage.clear();
+			view.removeAllCard();
+			$(".notView").remove();
+			$(".peopleCards").remove();
+			$("#game").removeClass("view");
+			$(".getGame").addClass('view');
+            view.showScore();
+		},
+		
+		
+		
+		
+		//Использование локального хранилища
+		rememberGame: function(){
+			if (typeof localStorage !== 'undefined'){
+				localStorage.removeItem("startStage");
+				localStorage.setItem('modelCardsOnTable', model.cardsOnTable);
+				localStorage.setItem('modelDeckOfCards', model.deckOfCards);
+				localStorage.setItem('modelLastBribe', model.lastBribe);
+				localStorage.setItem('modelLastGame', model.lastGame);
+				localStorage.setItem('modelPlayerName', model.playerName);
+				localStorage.setItem('modelPlayerStroke', model.playerStroke);
+				for(let i = 0; i < model.players.length; i++){
+					localStorage.setItem('playerAllBribes' + i, model.players[i].allBribes);
+					localStorage.setItem('playerAllTakenCards' + i, model.players[i].allTakenCards);
+					localStorage.setItem('playerBribes' + i, model.players[i].bribes);
+					localStorage.setItem('playerDeck' + i, model.players[i].deck);
+					localStorage.setItem('playerScore' + i, model.players[i].score);
+					localStorage.setItem('playerTakenCards' + i, model.players[i].takenCards);
+				}
+			}
+		},
+		resumeGame: function(){
+			//Задать игроков
+			for(let i = 0; i < model.amountOfplayers; i++){
+				model.players[i] = {
+					deck: [],
+					score: 0,
+					takenCards: [],
+                    bribes: 0,
+                    allTakenCards: 0,
+                    allBribes: 0
+				};
+			}
+			//Вернуть всё
+            let deck = controler.testArrOrString(localStorage.getItem('modelCardsOnTable'));
+            if(deck) model.cardsOnTable = deck;
+            else model.cardsOnTable = [];
+            deck = controler.testArrOrString(localStorage.getItem('modelDeckOfCards'));
+            if(deck) model.deckOfCards = deck;
+            else model.deckOfCards = [];
+			model.lastBribe = Number(localStorage.getItem('modelLastBribe'));
+			model.lastGame = localStorage.getItem('modelLastGame') !== 'false';
+			model.playerName = localStorage.getItem('modelPlayerName');
+            model.playerStroke = localStorage.getItem('modelPlayerStroke') !== 'false';
+			for(let i = 0; i < 2; i++){
+					model.players[i].allBribes = Number(localStorage.getItem('playerAllBribes' + i));
+					model.players[i].allTakenCards = Number(localStorage.getItem('playerAllTakenCards' + i));
+					model.players[i].bribes = Number(localStorage.getItem('playerBribes' + i));
+					let deck = controler.testArrOrString(localStorage.getItem('playerDeck' + i));
+					if(deck) model.players[i].deck = deck;
+					else model.players[i].deck = [];
+					deck = controler.testArrOrString(localStorage.getItem('playerTakenCards' + i));
+                    if(deck) model.players[i].takenCards = deck;
+                    else model.players[i].takenCards = [];
+					model.players[i].score = Number(localStorage.getItem('playerScore' + i));	
+			}
+			controler.showAll();
+		},
+        testArrOrString: function(arr){
+		    if(arr !== ""){
+                return arr.split(',');
+            }
+            return false;
+        },
+		showAll: function(){
+			for(let i = 0; i < model.players.length; i++){
+				for(let k = 0; k < model.players[i].deck.length; k++){
+					view.getCardForPlayer(i, model.players[i].deck[k], 0);
+				}
+			}
+			for(let i = 0; i < model.cardsOnTable.length; i++){
+				view.layCardOnTable(model.cardsOnTable[i]);
+			}
+			view.showScore();
+			$(".playerName").text(model.playerName);
+			let arr = localStorage.getItem('startStage');
+			if(arr !== null){
+				arr = arr.split(',');
+				//Преобразовать к числам
+				arr = arr.map(function(el){
+					return Number(el);
+				});
+				view.getRes(["Ботиус", model.playerName], arr);
+			}else{
+				controler.endOfStroke(0);	
+			}
+		}
 	};
+	if (typeof localStorage !== 'undefined'){
+		if(localStorage.getItem('modelCardsOnTable') !== null){
+			$(".getGame").removeClass('view');
+			$("#game").addClass("view");
+            $("#endGame").addClass("view");
+			view.rules();
+			controler.resumeGame();
+		}
+	}
+	$('#endGame').click(function(){
+		controler.endGame();
+		$("#endGame").removeClass("view");
+	});
 	function start(){
         $("#game").addClass("view");
+		$("#endGame").addClass("view");
         let val = $(".getGame input").val();
         if(val.length > 20){
             alert("Уходи");
         }else{
+            localStorage.clear();
+            view.removeAllCard();
+            $(".notView").remove();
+            $(".peopleCards").remove();
             if(val === "") val = "Безликий";
-            $(".getGame").remove();
+            $(".getGame").removeClass('view');
             controler.startGame();
             $(".playerName").text(val);
             model.playerName = val;
